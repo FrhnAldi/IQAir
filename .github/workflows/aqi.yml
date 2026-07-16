@@ -1,0 +1,62 @@
+name: AQICN Scraper
+
+on:
+  schedule:
+    - cron: '0 * * * *'   # Setiap 1 jam
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Scraper
+        env:
+          IQAIR_API_KEY: ${{ secrets.IQAIR_API_KEY }}
+        run: |
+          python scraper.py
+
+      - name: Show Files
+        run: |
+          echo "Isi folder:"
+          ls -lah
+
+      - name: Commit & Push CSV
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if [ -f aqicn.csv ]; then
+            echo "CSV ditemukan"
+
+            git add aqicn.csv
+
+            if git diff --cached --quiet; then
+              echo "Tidak ada perubahan."
+            else
+              git commit -m "Update AQI $(date '+%Y-%m-%d %H:%M:%S')"
+              git push
+            fi
+
+          else
+            echo "aqicn.csv tidak ditemukan!"
+            exit 1
+          fi
