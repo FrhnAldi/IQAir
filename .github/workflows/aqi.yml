@@ -1,9 +1,9 @@
 name: AQICN Scraper
 
 on:
-  schedule:
-    - cron: '0 * * * *'   # Setiap 1 jam
-  workflow_dispatch:
+  repository_dispatch:
+    types: [hourly-cron] # Event ini yang akan dipanggil oleh cron-job.org
+  workflow_dispatch:     # Tetap dipertahankan agar bisa dijalankan manual
 
 permissions:
   contents: write
